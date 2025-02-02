@@ -16,6 +16,9 @@ const ThreeScene = () => {
   useEffect(() => {
     if (!mountRef.current) return;
 
+    // Store the current value of mountRef in a local variable
+    const mountNode = mountRef.current;
+
     // Scene setup
     const scene = new THREE.Scene();
 
@@ -44,7 +47,7 @@ const ThreeScene = () => {
     canvas.style.transform = "translate(-50%, -50%)";
 
     // Append canvas to the DOM
-    mountRef.current.appendChild(canvas);
+    mountNode.appendChild(canvas);
 
     // Update canvas size
     const updateCanvasSize = () => {
@@ -67,15 +70,11 @@ const ThreeScene = () => {
     // RGB Lighting setup
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
     directionalLight.position.set(9, 5, 5);
-
     const redLight = new THREE.PointLight(0xff0000, 0.8); // Red light
     redLight.position.set(-5, 3, 2);
-
     const blueLight = new THREE.PointLight(0x0000ff, 0.8); // Blue light
     blueLight.position.set(5, -3, -2);
-
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Soft white ambient light
-
     scene.add(directionalLight, redLight, blueLight, ambientLight);
 
     // Model loading
@@ -83,7 +82,6 @@ const ThreeScene = () => {
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
     loader.setDRACOLoader(dracoLoader);
-
     loader.load(
       "/sculpt2.glb",
       (gltf) => {
@@ -105,12 +103,10 @@ const ThreeScene = () => {
         const box = new THREE.Box3().setFromObject(modelRef.current);
         const center = box.getCenter(new THREE.Vector3());
         modelRef.current.position.sub(center);
-
         const size = box.getSize(new THREE.Vector3()).length();
         const cameraDistance =
           size / (2 * Math.tan((Math.PI * cameraRef.current.fov) / 360));
         cameraRef.current.position.z = cameraDistance * 1.5;
-
         scene.add(modelRef.current);
       },
       undefined,
@@ -156,9 +152,11 @@ const ThreeScene = () => {
     // Cleanup
     return () => {
       window.removeEventListener("resize", handleResize);
-      if (mountRef.current) {
-        mountRef.current.removeChild(canvas);
+
+      if (mountNode) {
+        mountNode.removeChild(canvas);
       }
+
       if (modelRef.current) {
         scene.remove(modelRef.current);
         modelRef.current.traverse((child) => {
@@ -172,6 +170,7 @@ const ThreeScene = () => {
           }
         });
       }
+
       controlsRef.current.dispose();
       rendererRef.current.dispose();
       dracoLoader.dispose();
